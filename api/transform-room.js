@@ -1,6 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 
+// Style prompts with detailed descriptions for better AI results
+const stylePrompts = {
+  'Scandinavian': 'Scandinavian style: Light wood furniture, minimal decor, neutral colors (whites, grays, beiges), natural materials, clean lines, functional design, lots of natural light, cozy hygge elements, simple geometric patterns, natural textures like wool and linen',
+  'Modern': 'Modern style: Sleek furniture, geometric shapes, neutral color palette, clean lines, minimal clutter, open spaces, contemporary art, statement lighting, smooth surfaces, bold accents, technology integration',
+  'Bohemian': 'Bohemian style: Eclectic mix of patterns and textures, warm earthy colors, layered textiles, vintage furniture, plants, artistic elements, free-spirited and creative atmosphere, global influences, handmade items, rich jewel tones',
+  'Rustic': 'Rustic style: Natural wood elements, stone features, warm earth tones, vintage or distressed furniture, cozy textiles, natural materials, exposed beams, farmhouse charm, comfortable and inviting atmosphere, traditional craftsmanship',
+  'Industrial': 'Industrial style: Exposed brick walls, metal fixtures, raw materials, neutral color palette, vintage machinery elements, open ductwork, concrete floors, leather furniture, Edison bulbs, urban warehouse aesthetic',
+  'Minimalist': 'Minimalist style: Clean lines, uncluttered spaces, neutral color palette, functional furniture, hidden storage, simple geometric shapes, natural light, quality over quantity, zen-like atmosphere, essential items only',
+  'Traditional': 'Traditional style: Classic furniture, rich fabrics, warm color palette, ornate details, symmetry, formal arrangement, antique pieces, elegant lighting, sophisticated patterns, timeless elegance',
+  'Contemporary': 'Contemporary style: Current design trends, clean lines, neutral colors with bold accents, open floor plans, natural materials, large windows, comfortable yet sophisticated, current technology integration',
+  'Art Deco': 'Art Deco style: Geometric patterns, bold colors, luxurious materials, symmetrical designs, metallic accents, glamorous lighting, rich textures, sophisticated elegance, 1920s-1930s aesthetic, statement pieces',
+  'Mediterranean': 'Mediterranean style: Warm earth tones, terracotta tiles, wrought iron details, natural stone, arched doorways, rustic furniture, vibrant colors, outdoor-indoor living, coastal influences, relaxed elegance'
+};
+
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -63,8 +77,10 @@ export default async function handler(req, res) {
 
     // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
-    const prompt = `Recreate this room in ${interiorStyle} style. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
-
+    
+    // Use enhanced style prompt if available, otherwise fall back to basic prompt
+    const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
+    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
@@ -135,6 +151,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-}
-
-// comment
+} 
