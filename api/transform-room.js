@@ -63,22 +63,8 @@ export default async function handler(req, res) {
 
     // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
-    const prompt = `You are a professional interior designer. Your job is to enhance the given room using the ${interiorStyle.toLowerCase()} interior design style. 
-${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} with proper furnitures.
-Important rules:
-- Do not change the room’s layout, size, perspective, proportions, or structural features (such as windows, doors, ceiling height, wall shapes, or flooring layout).
-- The design must respect the original architecture and viewpoint of the image.
-- Maintain the exact same position and structure of all fixed elements.
-- Do not add new architectural features, openings, or extra rooms.
+    const prompt = `Recreate this room in ${interiorStyle} style. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
-Your task is to *transform the interior look and feel* of the room by:
-- Adding a few carefully selected furniture pieces in the ${interiorStyle} style
-- Adjusting colors, textures, materials, lighting, and wall/ceiling treatments
-- Ensuring the result looks realistic, professionally designed, and naturally lit
-- Avoiding clutter or excessive decoration — keep it elegant and simple
-- Matching real-world references for how ${interiorStyle} rooms are typically designed
-
-The transformation should be tasteful and photorealistic. Avoid over-designing or making it look artificially generated. The final result should feel like a real, livable space with a refined design in the ${interiorStyle} style.`;
 
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
