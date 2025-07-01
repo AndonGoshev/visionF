@@ -55,33 +55,36 @@ export default async function handler(req, res) {
       .png()
       .toBuffer();
 
-    // Prepare form data for Stability AI using formdata-node
 const { FormData, File } = await import('formdata-node');
 const formData = new FormData();
 formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
 
-// ULTRA-CONSERVATIVE prompt focusing only on surface changes
-const prompt = `Redecorate this room in ${interiorStyle.toLowerCase()} style. PRESERVE: exact room shape, all walls, ceiling, floor, windows, doors, room size, camera angle. CHANGE ONLY: paint colors, furniture style, fabric textures, lighting fixtures, decorations, artwork. Same room, different styling only. Photorealistic ${interiorStyle} interior.`;
-
+const prompt = `Redesign this room in a minimal ${interiorStyle.toLowerCase()} interior design style.
+Keep the room's exact layout, perspective, proportions, walls, windows, doors, and architectural structure unchanged.
+Only add a *few* essential furniture pieces and subtle decoration.
+Avoid excessive styling or added details.
+Make it realistic, photorealistic, and practical.
+Do not over-design. Keep the scene clean and simple.`;
 formData.append('text_prompts[0][text]', prompt);
 formData.append('text_prompts[0][weight]', '1');
 
-// More comprehensive negative prompt to prevent structural changes
-const negativePrompt = `changing room layout, altering walls, moving doors, changing windows, different room size, altered ceiling, modified floor plan, changing architectural structure, adding rooms, removing walls, different perspective, distorted proportions, changing room dimensions, structural modifications, building changes, cartoon, painting, sketch, blurry, low quality, unrealistic, oversaturated, artificial`;
-
+const negativePrompt = `changing room layout, moving walls, adding extra rooms, adding furniture clutter, busy decorations, unrealistic elements, adding or removing doors/windows, distorted geometry, overdesign, sketch, cartoon, illustration, low quality, blurry, fantasy`;
 formData.append('text_prompts[1][text]', negativePrompt);
 formData.append('text_prompts[1][weight]', '-1');
 
-// Key settings for maximum structure preservation - AGGRESSIVE APPROACH
+// Set to "IMAGE_STRENGTH" mode for strict adherence
 formData.append('init_image_mode', 'IMAGE_STRENGTH');
-formData.append('image_strength', '0.15'); // Much lower - minimal deviation from original
-formData.append('cfg_scale', '10'); // Higher - stronger prompt adherence
-formData.append('samples', '1');
-formData.append('steps', '50'); // More steps for better control
 
-// Additional settings for better control (if supported by your API version)
-formData.append('seed', Math.floor(Math.random() * 1000000)); // For reproducibility
-formData.append('style_preset', 'photographic'); // If available - ensures realistic output
+// Lower value = more faithful to original image (try 0.2 to 0.3)
+formData.append('image_strength', '0.25');
+
+// Lower CFG scale = less pushy toward the prompt (avoids hallucinations)
+formData.append('cfg_scale', '5');
+
+// Fewer steps = faster, simpler results. Optional: try 20–25
+formData.append('samples', '1');
+formData.append('steps', '25');
+
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
