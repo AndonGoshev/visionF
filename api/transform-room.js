@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
     const prompt = `You are a professional interior designer. Your job is to enhance the given room using the ${interiorStyle.toLowerCase()} interior design style. 
-
+${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} ${interiorStyle.toLowerCase()} with proper furnitures.
 Important rules:
 - Do not change the room’s layout, size, perspective, proportions, or structural features (such as windows, doors, ceiling height, wall shapes, or flooring layout).
 - The design must respect the original architecture and viewpoint of the image.
