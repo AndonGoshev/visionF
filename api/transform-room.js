@@ -59,17 +59,17 @@ export default async function handler(req, res) {
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
     formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
-    const prompt = `Transform this room into ${interiorStyle.toLowerCase()} interior design style. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.`;
+    const prompt = `Transform this room into ${interiorStyle.toLowerCase()} interior design style. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.Dont make it too ai , make it simple and the most important thing - the lauot of the room shoud be the same ,also the size and the part of the room. Never add aditional rooms or doors or whatever. Keep it simple dont over interior-design it`;
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
     const negativePrompt = `changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
     formData.append('text_prompts[1][text]', negativePrompt);
     formData.append('text_prompts[1][weight]', '-1');
     formData.append('init_image_mode', 'IMAGE_STRENGTH');
-    formData.append('image_strength', '0.35');
-    formData.append('cfg_scale', '7');
+    formData.append('image_strength', '0.15');
+    formData.append('cfg_scale', '9');
     formData.append('samples', '1');
-    formData.append('steps', '30');
+    formData.append('steps', '50');
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
