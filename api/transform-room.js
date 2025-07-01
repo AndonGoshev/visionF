@@ -59,7 +59,23 @@ export default async function handler(req, res) {
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
     formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
-    const prompt = `You are professional interior designer. You might be given an empty room or already designed. Add a few but not  lot of furnitures to enhance the interior design. Your task is to transform this room into ${interiorStyle.toLowerCase()} interior design style.Its important to really create this design, make it rich. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.Dont make it too ai , make it simple and the most important thing - the lauot of the room shoud be the same ,also the size and the part of the room. Never add aditional rooms or doors or whatever. Keep it simple dont over interior-design it`;
+    const prompt = `You are a professional interior designer. Your job is to enhance the given room using the ${interiorStyle.toLowerCase()} interior design style. 
+
+Important rules:
+- Do not change the room’s layout, size, perspective, proportions, or structural features (such as windows, doors, ceiling height, wall shapes, or flooring layout).
+- The design must respect the original architecture and viewpoint of the image.
+- Maintain the exact same position and structure of all fixed elements.
+- Do not add new architectural features, openings, or extra rooms.
+
+Your task is to *transform the interior look and feel* of the room by:
+- Adding a few carefully selected furniture pieces in the ${interiorStyle} style
+- Adjusting colors, textures, materials, lighting, and wall/ceiling treatments
+- Ensuring the result looks realistic, professionally designed, and naturally lit
+- Avoiding clutter or excessive decoration — keep it elegant and simple
+- Matching real-world references for how ${interiorStyle} rooms are typically designed
+
+The transformation should be tasteful and photorealistic. Avoid over-designing or making it look artificially generated. The final result should feel like a real, livable space with a refined design in the ${interiorStyle} style.`;
+
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
     const negativePrompt = `changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
