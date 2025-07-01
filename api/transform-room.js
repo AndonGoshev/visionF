@@ -66,10 +66,10 @@ export default async function handler(req, res) {
     formData.append('text_prompts[1][text]', negativePrompt);
     formData.append('text_prompts[1][weight]', '-1');
     formData.append('init_image_mode', 'IMAGE_STRENGTH');
-    formData.append('image_strength', '0.15');
-    formData.append('cfg_scale', '9');
+    formData.append('image_strength', '0.35');
+    formData.append('cfg_scale', '7');
     formData.append('samples', '1');
-    formData.append('steps', '50');
+    formData.append('steps', '30');
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
