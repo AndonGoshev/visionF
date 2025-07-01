@@ -58,6 +58,10 @@ export default async function handler(req, res) {
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
+    // Set the image first
+    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
+
+    // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
     const prompt = `You are a professional interior designer. Your job is to enhance the given room using the ${interiorStyle.toLowerCase()} interior design style. 
 
