@@ -50,10 +50,15 @@ export default async function handler(req, res) {
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
     // Resize image to 1024x1024 using sharp
-    const resizedImageBuffer = await sharp(imageBuffer)
-      .resize(1024, 1024, { fit: 'cover' })
-      .png()
-      .toBuffer();
+const resizedImageBuffer = await sharp(imageBuffer)
+  .resize({
+    width: 768,
+    height: 512,
+    fit: 'fill' // or 'cover' if you prefer cropping
+  })
+  .png()
+  .toBuffer();
+
 
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
