@@ -60,8 +60,8 @@ const { FormData, File } = await import('formdata-node');
 const formData = new FormData();
 formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
 
-// Enhanced prompt with stronger emphasis on preserving room structure
-const prompt = `Apply ${interiorStyle.toLowerCase()} interior design style to this room. CRITICAL: Keep identical room layout, exact same walls, ceiling, floor, windows, doors, architectural elements, room size, and perspective. ONLY modify: furniture pieces, wall colors/paint, flooring materials, lighting fixtures, curtains/blinds, decorative accessories, artwork, plants. Maintain exact same room proportions and viewpoint. Professional ${interiorStyle} interior design, realistic lighting, high quality.`;
+// ULTRA-CONSERVATIVE prompt focusing only on surface changes
+const prompt = `Redecorate this room in ${interiorStyle.toLowerCase()} style. PRESERVE: exact room shape, all walls, ceiling, floor, windows, doors, room size, camera angle. CHANGE ONLY: paint colors, furniture style, fabric textures, lighting fixtures, decorations, artwork. Same room, different styling only. Photorealistic ${interiorStyle} interior.`;
 
 formData.append('text_prompts[0][text]', prompt);
 formData.append('text_prompts[0][weight]', '1');
@@ -72,12 +72,12 @@ const negativePrompt = `changing room layout, altering walls, moving doors, chan
 formData.append('text_prompts[1][text]', negativePrompt);
 formData.append('text_prompts[1][weight]', '-1');
 
-// Key settings for maximum structure preservation
+// Key settings for maximum structure preservation - AGGRESSIVE APPROACH
 formData.append('init_image_mode', 'IMAGE_STRENGTH');
-formData.append('image_strength', '0.25'); // Reduced from 0.35 - stronger adherence to original
-formData.append('cfg_scale', '8'); // Increased from 7 - better prompt following
+formData.append('image_strength', '0.15'); // Much lower - minimal deviation from original
+formData.append('cfg_scale', '10'); // Higher - stronger prompt adherence
 formData.append('samples', '1');
-formData.append('steps', '40'); // Increased from 30 - better quality and control
+formData.append('steps', '50'); // More steps for better control
 
 // Additional settings for better control (if supported by your API version)
 formData.append('seed', Math.floor(Math.random() * 1000000)); // For reproducibility
