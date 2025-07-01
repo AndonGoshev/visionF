@@ -56,20 +56,32 @@ export default async function handler(req, res) {
       .toBuffer();
 
     // Prepare form data for Stability AI using formdata-node
-    const { FormData, File } = await import('formdata-node');
-    const formData = new FormData();
-    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
-    const prompt = `Transform this room into ${interiorStyle.toLowerCase()} interior design style. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.Dont make it too ai , make it simple and the most important thing - the lauot of the room shoud be the same ,also the size and the part of the room. Never add aditional rooms or doors or whatever. Keep it simple dont over interior-design it`;
-    formData.append('text_prompts[0][text]', prompt);
-    formData.append('text_prompts[0][weight]', '1');
-    const negativePrompt = `changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
-    formData.append('text_prompts[1][text]', negativePrompt);
-    formData.append('text_prompts[1][weight]', '-1');
-    formData.append('init_image_mode', 'IMAGE_STRENGTH');
-    formData.append('image_strength', '0.35');
-    formData.append('cfg_scale', '7');
-    formData.append('samples', '1');
-    formData.append('steps', '30');
+const { FormData, File } = await import('formdata-node');
+const formData = new FormData();
+formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
+
+// Enhanced prompt with stronger emphasis on preserving room structure
+const prompt = `Apply ${interiorStyle.toLowerCase()} interior design style to this room. CRITICAL: Keep identical room layout, exact same walls, ceiling, floor, windows, doors, architectural elements, room size, and perspective. ONLY modify: furniture pieces, wall colors/paint, flooring materials, lighting fixtures, curtains/blinds, decorative accessories, artwork, plants. Maintain exact same room proportions and viewpoint. Professional ${interiorStyle} interior design, realistic lighting, high quality.`;
+
+formData.append('text_prompts[0][text]', prompt);
+formData.append('text_prompts[0][weight]', '1');
+
+// More comprehensive negative prompt to prevent structural changes
+const negativePrompt = `changing room layout, altering walls, moving doors, changing windows, different room size, altered ceiling, modified floor plan, changing architectural structure, adding rooms, removing walls, different perspective, distorted proportions, changing room dimensions, structural modifications, building changes, cartoon, painting, sketch, blurry, low quality, unrealistic, oversaturated, artificial`;
+
+formData.append('text_prompts[1][text]', negativePrompt);
+formData.append('text_prompts[1][weight]', '-1');
+
+// Key settings for maximum structure preservation
+formData.append('init_image_mode', 'IMAGE_STRENGTH');
+formData.append('image_strength', '0.25'); // Reduced from 0.35 - stronger adherence to original
+formData.append('cfg_scale', '8'); // Increased from 7 - better prompt following
+formData.append('samples', '1');
+formData.append('steps', '40'); // Increased from 30 - better quality and control
+
+// Additional settings for better control (if supported by your API version)
+formData.append('seed', Math.floor(Math.random() * 1000000)); // For reproducibility
+formData.append('style_preset', 'photographic'); // If available - ensures realistic output
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
