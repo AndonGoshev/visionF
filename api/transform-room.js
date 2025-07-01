@@ -3,17 +3,18 @@ import sharp from 'sharp';
 
 // Style prompts with detailed descriptions for better AI results
 const stylePrompts = {
-  'Scandinavian': 'Scandinavian style: Light wood furniture, minimal decor, neutral colors (whites, grays, beiges), natural materials, clean lines, functional design, lots of natural light, cozy hygge elements, simple geometric patterns, natural textures like wool and linen',
-  'Modern': 'Modern style: Sleek furniture, geometric shapes, neutral color palette, clean lines, minimal clutter, open spaces, contemporary art, statement lighting, smooth surfaces, bold accents, technology integration',
-  'Bohemian': 'Bohemian style: Eclectic mix of patterns and textures, warm earthy colors, layered textiles, vintage furniture, plants, artistic elements, free-spirited and creative atmosphere, global influences, handmade items, rich jewel tones',
-  'Rustic': 'Rustic style: Natural wood elements, stone features, warm earth tones, vintage or distressed furniture, cozy textiles, natural materials, exposed beams, farmhouse charm, comfortable and inviting atmosphere, traditional craftsmanship',
-  'Industrial': 'Industrial style: Exposed brick walls, metal fixtures, raw materials, neutral color palette, vintage machinery elements, open ductwork, concrete floors, leather furniture, Edison bulbs, urban warehouse aesthetic',
-  'Minimalist': 'Minimalist style: Clean lines, uncluttered spaces, neutral color palette, functional furniture, hidden storage, simple geometric shapes, natural light, quality over quantity, zen-like atmosphere, essential items only',
-  'Traditional': 'Traditional style: Classic furniture, rich fabrics, warm color palette, ornate details, symmetry, formal arrangement, antique pieces, elegant lighting, sophisticated patterns, timeless elegance',
-  'Contemporary': 'Contemporary style: Current design trends, clean lines, neutral colors with bold accents, open floor plans, natural materials, large windows, comfortable yet sophisticated, current technology integration',
-  'Art Deco': 'Art Deco style: Geometric patterns, bold colors, luxurious materials, symmetrical designs, metallic accents, glamorous lighting, rich textures, sophisticated elegance, 1920s-1930s aesthetic, statement pieces',
-  'Mediterranean': 'Mediterranean style: Warm earth tones, terracotta tiles, wrought iron details, natural stone, arched doorways, rustic furniture, vibrant colors, outdoor-indoor living, coastal influences, relaxed elegance'
+  'Scandinavian': 'Scandinavian style: Light wood, minimal decor, neutral tones, natural textures, functional and clean. Keep room layout and size exactly the same.',
+  'Modern': 'Modern style: Sleek lines, geometric shapes, minimal clutter, bold accents, and tech-friendly. Do not change layout or room size.',
+  'Bohemian': 'Bohemian style: Eclectic patterns, warm earthy tones, layered textiles, plants, and global vintage vibe. Keep same room layout and proportions.',
+  'Rustic': 'Rustic style: Raw wood, stone, cozy fabrics, warm tones, farmhouse charm, and a natural feel. Maintain original room layout and dimensions.',
+  'Industrial': 'Industrial style: Exposed brick, metal, concrete, neutral colors, and urban warehouse look. Do not alter layout or room size.',
+  'Minimalist': 'Minimalist style: Neutral palette, functional furniture, clean geometry, and uncluttered space. Keep layout and dimensions unchanged.',
+  'Traditional': 'Traditional style: Classic furniture, rich fabrics, warm tones, symmetry, and antique touches. Do not change room structure or size.',
+  'Contemporary': 'Contemporary style: Open spaces, clean lines, neutral base with bold accents, and current trends. Preserve original room layout and size.',
+  'Art Deco': 'Art Deco style: Glamorous symmetry, bold colors, geometric patterns, and luxe materials. Keep room dimensions and layout exactly the same.',
+  'Mediterranean': 'Mediterranean style: Warm tones, stone, arched forms, rustic wood, vibrant coastal feel. Do not change layout or proportions of the room.'
 };
+
 
 export default async function handler(req, res) {
   // CORS headers
