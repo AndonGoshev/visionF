@@ -50,15 +50,10 @@ export default async function handler(req, res) {
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
     // Resize image to 1024x1024 using sharp
-const resizedImageBuffer = await sharp(imageBuffer)
-  .resize({
-    width: 768,
-    height: 512,
-    fit: 'fill' // or 'cover' if you prefer cropping
-  })
-  .png()
-  .toBuffer();
-
+    const resizedImageBuffer = await sharp(imageBuffer)
+      .resize(1024, 1024, { fit: 'cover' })
+      .png()
+      .toBuffer();
 
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
@@ -77,16 +72,15 @@ const resizedImageBuffer = await sharp(imageBuffer)
     formData.append('steps', '30');
 
     // Call Stability AI API
-    const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-beta-v2-2-2/image-to-image', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${stabilityApiKey}`,
-    'Accept': 'application/json',
-    // Do NOT set Content-Type; fetch will set it automatically for FormData
-  },
-  body: formData,
-});
-
+    const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stabilityApiKey}`,
+        'Accept': 'application/json',
+        // Do NOT set Content-Type; fetch will set it automatically for FormData
+      },
+      body: formData,
+    });
     if (!stabilityResponse.ok) {
       const errorText = await stabilityResponse.text();
       return res.status(500).json({ error: `Stability AI generation failed: ${stabilityResponse.status} - ${errorText}` });
