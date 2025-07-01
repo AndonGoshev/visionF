@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
-    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
+    formData.set('sampler', 'K_DPMPP_2M');
     const prompt = `You are a professional interior designer. Your job is to enhance the given room using the ${interiorStyle.toLowerCase()} interior design style. 
 
 Important rules:
@@ -78,14 +78,14 @@ The transformation should be tasteful and photorealistic. Avoid over-designing o
 
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
-    const negativePrompt = `changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
+    const negativePrompt = `low resolution, painting, changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
     formData.append('text_prompts[1][text]', negativePrompt);
     formData.append('text_prompts[1][weight]', '-1');
     formData.append('init_image_mode', 'IMAGE_STRENGTH');
     formData.append('image_strength', '0.35');
-    formData.append('cfg_scale', '7');
+    formData.append('cfg_scale', '11');
     formData.append('samples', '1');
-    formData.append('steps', '50');
+    formData.append('steps', '30');
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
