@@ -48,10 +48,10 @@ export default async function handler(req, res) {
     }
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
-    // Prepare form data for Stability AI
-    const FormData = (await import('form-data')).default;
+    // Prepare form data for Stability AI using formdata-node
+    const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
-    formData.append('init_image', imageBuffer, { filename: 'init.png', contentType: 'image/png' });
+    formData.set('init_image', new File([imageBuffer], 'init.png', { type: 'image/png' }));
     const prompt = `Transform this room into ${interiorStyle.toLowerCase()} interior design style. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.`;
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
       headers: {
         'Authorization': `Bearer ${stabilityApiKey}`,
         'Accept': 'application/json',
-        ...formData.getHeaders(),
+        // Do NOT set Content-Type; fetch will set it automatically for FormData
       },
       body: formData,
     });
@@ -122,4 +122,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-} 
+}
