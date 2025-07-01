@@ -85,7 +85,7 @@ The transformation should be tasteful and photorealistic. Avoid over-designing o
     formData.append('image_strength', '0.35');
     formData.append('cfg_scale', '7');
     formData.append('samples', '1');
-    formData.append('steps', '60');
+    formData.append('steps', '50');
 
     // Call Stability AI API
     const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
