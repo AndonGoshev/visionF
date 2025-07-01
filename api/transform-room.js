@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import sharp from 'sharp';
 
 export default async function handler(req, res) {
   // CORS headers
@@ -48,10 +49,16 @@ export default async function handler(req, res) {
     }
     const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
 
+    // Resize image to 1024x1024 using sharp
+    const resizedImageBuffer = await sharp(imageBuffer)
+      .resize(1024, 1024, { fit: 'cover' })
+      .png()
+      .toBuffer();
+
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
-    formData.set('init_image', new File([imageBuffer], 'init.png', { type: 'image/png' }));
+    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
     const prompt = `Transform this room into ${interiorStyle.toLowerCase()} interior design style. Keep the exact same room layout, dimensions, windows, doors, and architectural features. Only change furniture, colors, textures, wall treatments, lighting fixtures, and decorative elements to match ${interiorStyle} style. Maintain the same perspective, room structure, and spatial relationships. High quality, professional interior design, realistic lighting, detailed textures, photorealistic.`;
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
