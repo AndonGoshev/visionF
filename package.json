@@ -5,7 +5,7 @@
     "formdata-node": "^6.0.3",
     "sharp": "^0.34.2",
     "jimp": "^0.22.10",
-    "canny-edge-detector": "^1.0.3",
+    "canny-edge-detector": "1.0.0",
     "image-js": "^0.44.2"
   }
 }
