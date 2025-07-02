@@ -1,7 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
-import cv from 'opencv4nodejs';
-import fs from 'fs';
 
 // Style prompts with detailed descriptions for better AI results
 const stylePrompts = {
@@ -25,6 +23,7 @@ const stylePrompts = {
 
   'Mediterranean': 'Mediterranean style transformation: Add warm, earthy furniture with rustic wood finishes - dining table with thick, weathered wood planks and wrought iron details, chairs with woven rush seats or colorful ceramic tile inlays, wooden shelving with hand-forged iron brackets. Use warm color palette of terracotta oranges, deep blues like ocean water, sunny yellows, and earthy browns. Include natural stone elements like stone accent walls, stone countertops, or stone tile floors. Add Mediterranean textiles like colorful ceramic tiles, woven rugs with geometric patterns, and curtains in warm, rich colors. Include abundant plants like olive trees in large terracotta pots, lavender, rosemary, and other Mediterranean herbs, and climbing vines if space allows. Add wrought iron accessories like candle holders, light fixtures with scrollwork, and decorative metal wall art. Use natural materials like rough-hewn wood, hand-painted ceramics, woven baskets, and natural fiber textiles. Include warm lighting from wrought iron chandeliers, ceramic table lamps, and lantern-style fixtures. CRITICAL: Maintain the exact same room layout, dimensions, height, proportions, and camera angle. Do not alter the room structure or viewing perspective.'
 };
+
 
 export default async function handler(req, res) {
   // CORS headers
@@ -80,41 +79,18 @@ export default async function handler(req, res) {
       .png()
       .toBuffer();
 
-    // Save resized image temporarily for OpenCV
-    const tempInputPath = `/tmp/input_${Date.now()}.png`;
-    const tempOutputPath = `/tmp/outlined_${Date.now()}.png`;
-    fs.writeFileSync(tempInputPath, resizedImageBuffer);
-
-    // Use OpenCV to detect edges and draw outlines
-    const inputMat = cv.imread(tempInputPath);
-    const gray = inputMat.bgrToGray();
-    const edges = gray.canny(100, 200);
-    const lines = edges.houghLinesP(1, Math.PI/180, 50, 50, 10);
-    if (lines) {
-      lines.forEach(line => {
-        const [x1, y1, x2, y2] = line.getPoints();
-        inputMat.drawLine(new cv.Point(x1, y1), new cv.Point(x2, y2), new cv.Vec3(0, 0, 255), 2); // Red lines
-      });
-    }
-    cv.imwrite(tempOutputPath, inputMat);
-    const outlinedImageBuffer = fs.readFileSync(tempOutputPath);
-
-    // Clean up temp files
-    fs.unlinkSync(tempInputPath);
-    fs.unlinkSync(tempOutputPath);
-
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
-    // Set the outlined image as init_image
-    formData.set('init_image', new File([outlinedImageBuffer], 'init.png', { type: 'image/png' }));
+    // Set the image first
+    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
 
     // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
     
     // Use enhanced style prompt if available, otherwise fall back to basic prompt
     const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
-    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Do not change or move any walls, windows, or doors. Respect the visible red outlines marking the room's structure. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
+    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
@@ -185,4 +161,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-}
+} 
