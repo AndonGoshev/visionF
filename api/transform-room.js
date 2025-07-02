@@ -1,5 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
+import Jimp from 'jimp';
+import cannyEdgeDetector from 'canny-edge-detector';
+import { Image } from 'image-js';
 
 // Style prompts with detailed descriptions for better AI results
 const stylePrompts = {
@@ -23,7 +26,6 @@ const stylePrompts = {
 
   'Mediterranean': 'Mediterranean style transformation: Add warm, earthy furniture with rustic wood finishes - dining table with thick, weathered wood planks and wrought iron details, chairs with woven rush seats or colorful ceramic tile inlays, wooden shelving with hand-forged iron brackets. Use warm color palette of terracotta oranges, deep blues like ocean water, sunny yellows, and earthy browns. Include natural stone elements like stone accent walls, stone countertops, or stone tile floors. Add Mediterranean textiles like colorful ceramic tiles, woven rugs with geometric patterns, and curtains in warm, rich colors. Include abundant plants like olive trees in large terracotta pots, lavender, rosemary, and other Mediterranean herbs, and climbing vines if space allows. Add wrought iron accessories like candle holders, light fixtures with scrollwork, and decorative metal wall art. Use natural materials like rough-hewn wood, hand-painted ceramics, woven baskets, and natural fiber textiles. Include warm lighting from wrought iron chandeliers, ceramic table lamps, and lantern-style fixtures. CRITICAL: Maintain the exact same room layout, dimensions, height, proportions, and camera angle. Do not alter the room structure or viewing perspective.'
 };
-
 
 export default async function handler(req, res) {
   // CORS headers
@@ -79,18 +81,36 @@ export default async function handler(req, res) {
       .png()
       .toBuffer();
 
+    // --- Pure JS edge detection and overlay ---
+    // Load image with Jimp
+    const jimpImage = await Jimp.read(resizedImageBuffer);
+    const image = await Image.load(resizedImageBuffer);
+    // Convert to grayscale and run Canny edge detector
+    const grey = image.grey();
+    const edges = cannyEdgeDetector(grey);
+    // Draw red pixels where edges are detected
+    for (let y = 0; y < edges.height; y++) {
+      for (let x = 0; x < edges.width; x++) {
+        if (edges.getBitXY(x, y)) {
+          jimpImage.setPixelColor(Jimp.rgbaToInt(255, 0, 0, 255), x, y); // Red pixel
+        }
+      }
+    }
+    const outlinedImageBuffer = await jimpImage.getBufferAsync(Jimp.MIME_PNG);
+    // --- End overlay ---
+
     // Prepare form data for Stability AI using formdata-node
     const { FormData, File } = await import('formdata-node');
     const formData = new FormData();
-    // Set the image first
-    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
+    // Set the outlined image as init_image
+    formData.set('init_image', new File([outlinedImageBuffer], 'init.png', { type: 'image/png' }));
 
     // Then set the sampler
     formData.set('sampler', 'K_DPMPP_2M');
     
     // Use enhanced style prompt if available, otherwise fall back to basic prompt
     const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
-    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
+    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Do not change or move any walls, windows, or doors. Respect the visible red outlines marking the room's structure. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     formData.append('text_prompts[0][text]', prompt);
     formData.append('text_prompts[0][weight]', '1');
@@ -161,4 +181,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-} 
+}
