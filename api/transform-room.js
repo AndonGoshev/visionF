@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     // 2. Poll for completion
     for (let i = 0; i < 60; i++) { // up to ~60 seconds
       if (status === 'succeeded') {
-        outputUrl = prediction.output && prediction.output[0];
+        outputUrl = prediction.output;
         break;
       }
       if (status === 'failed' || status === 'canceled') {
@@ -111,7 +111,7 @@ export default async function handler(req, res) {
       const pollData = await pollRes.json();
       status = pollData.status;
       if (status === 'succeeded') {
-        outputUrl = pollData.output && pollData.output[0];
+        outputUrl = pollData.output;
         // Debug log for outputUrl and pollData
         console.log('Replicate outputUrl:', outputUrl);
         console.log('Replicate pollData:', JSON.stringify(pollData));
