@@ -59,8 +59,14 @@ export default async function handler(req, res) {
     const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     // Replicate adirik/interior-design model version (update if needed)
-    const modelVersion = '76604bad';
+    const modelVersion = '76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38';
     // See: https://replicate.com/adirik/interior-design/api
+
+    // Set extra parameters for the model
+    const guidance_scale = 15;
+    const negative_prompt = 'lowres, watermark, banner, logo, watermark, contactinfo, text, deformed, blurry, blur, out of focus, out of frame, surreal, extra, ugly, upholstered walls, fabric walls, plush walls, mirror, mirrored, functional, realistic';
+    const prompt_strength = 0.8;
+    const num_inference_steps = 50;
 
     // 1. Start prediction
     const predictionResponse = await fetch('https://api.replicate.com/v1/predictions', {
@@ -73,7 +79,11 @@ export default async function handler(req, res) {
         version: modelVersion,
         input: {
           image: imageUrl,
-          prompt: prompt
+          prompt: prompt,
+          guidance_scale,
+          negative_prompt,
+          prompt_strength,
+          num_inference_steps
         }
       })
     });
