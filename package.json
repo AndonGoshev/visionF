@@ -3,6 +3,9 @@
     "@supabase/supabase-js": "^2.50.2",
     "form-data": "^4.0.3",
     "formdata-node": "^6.0.3",
-    "sharp": "^0.34.2"
+    "sharp": "^0.34.2",
+    "jimp": "^0.22.10",
+    "canny-edge-detector": "1.0.0",
+    "image-js": "0.37.0"
   }
 }

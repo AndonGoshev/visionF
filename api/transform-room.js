@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
-import fetch from 'node-fetch';
 
 // Style prompts with detailed descriptions for better AI results
 const stylePrompts = {
@@ -24,7 +23,6 @@ const stylePrompts = {
 
   'Mediterranean': 'Mediterranean style transformation: Add warm, earthy furniture with rustic wood finishes - dining table with thick, weathered wood planks and wrought iron details, chairs with woven rush seats or colorful ceramic tile inlays, wooden shelving with hand-forged iron brackets. Use warm color palette of terracotta oranges, deep blues like ocean water, sunny yellows, and earthy browns. Include natural stone elements like stone accent walls, stone countertops, or stone tile floors. Add Mediterranean textiles like colorful ceramic tiles, woven rugs with geometric patterns, and curtains in warm, rich colors. Include abundant plants like olive trees in large terracotta pots, lavender, rosemary, and other Mediterranean herbs, and climbing vines if space allows. Add wrought iron accessories like candle holders, light fixtures with scrollwork, and decorative metal wall art. Use natural materials like rough-hewn wood, hand-painted ceramics, woven baskets, and natural fiber textiles. Include warm lighting from wrought iron chandeliers, ceramic table lamps, and lantern-style fixtures. CRITICAL: Maintain the exact same room layout, dimensions, height, proportions, and camera angle. Do not alter the room structure or viewing perspective.'
 };
-
 
 export default async function handler(req, res) {
   // CORS headers
@@ -54,9 +52,44 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Missing required environment variables.' });
     }
 
+    // Test Stability AI API key
+    const accountResponse = await fetch('https://api.stability.ai/v1/user/account', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${stabilityApiKey}`,
+        'Accept': 'application/json',
+      },
+    });
+    if (!accountResponse.ok) {
+      const errorText = await accountResponse.text();
+      return res.status(500).json({ error: `Stability AI API key validation failed: ${accountResponse.status} - ${errorText}` });
+    }
+
+    // Download the original image
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      return res.status(400).json({ error: `Failed to fetch original image: ${imageResponse.status}` });
+    }
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+
+    // Resize image to 1024x1024 using sharp
+    const resizedImageBuffer = await sharp(imageBuffer)
+      .resize(1024, 1024, { fit: 'cover' })
+      .png()
+      .toBuffer();
+
+    // Prepare form data for Stability AI using formdata-node
+    const { FormData, File } = await import('formdata-node');
+    const formData = new FormData();
+    // Set the image first
+    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
+
+    // Then set the sampler
+    formData.set('sampler', 'K_DPMPP_2M');
+    
     // Use enhanced style prompt if available, otherwise fall back to basic prompt
     const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
-    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
+    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Do not change or move any walls, windows, or doors. Respect the visible red outlines marking the room's structure. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     // Replicate adirik/interior-design model version (update if needed)
     const modelVersion = 'b7c1e1e7e7e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2';
@@ -152,4 +185,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-} 
+}
