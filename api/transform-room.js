@@ -112,11 +112,16 @@ export default async function handler(req, res) {
       status = pollData.status;
       if (status === 'succeeded') {
         outputUrl = pollData.output && pollData.output[0];
+        // Debug log for outputUrl and pollData
+        console.log('Replicate outputUrl:', outputUrl);
+        console.log('Replicate pollData:', JSON.stringify(pollData));
         break;
       }
     }
-    if (!outputUrl) {
-      return res.status(500).json({ error: 'Replicate did not return a generated image in time.' });
+    // Defensive check for outputUrl
+    if (!outputUrl || !/^https?:\/\//.test(outputUrl)) {
+      console.error('Invalid or missing outputUrl from Replicate:', outputUrl);
+      return res.status(500).json({ error: 'Replicate did not return a valid image URL.' });
     }
     // 3. Download the generated image
     const genImgRes = await fetch(outputUrl);
