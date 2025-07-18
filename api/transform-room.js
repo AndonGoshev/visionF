@@ -56,7 +56,7 @@ export default async function handler(req, res) {
 
     // Use enhanced style prompt if available, otherwise fall back to basic prompt
     const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
-    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
+    const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Keep it as minimalistic as possible. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     // Replicate adirik/interior-design model version (update if needed)
     const modelVersion = '76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38';
