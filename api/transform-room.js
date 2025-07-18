@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
+import fetch from 'node-fetch';
 
 // Style prompts with detailed descriptions for better AI results
 const stylePrompts = {
@@ -45,86 +46,76 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters: imageUrl, interiorStyle, and roomId are required' });
     }
 
-    const stabilityApiKey = process.env.STABILITY_API_KEY;
+    const replicateApiToken = process.env.REPLICATE_API_TOKEN;
     const supabaseUrl = process.env.SB_URL;
     const supabaseServiceKey = process.env.SB_SERVICE_ROLE_KEY;
 
-    if (!stabilityApiKey || !supabaseUrl || !supabaseServiceKey) {
+    if (!replicateApiToken || !supabaseUrl || !supabaseServiceKey) {
       return res.status(500).json({ error: 'Missing required environment variables.' });
     }
 
-    // Test Stability AI API key
-    const accountResponse = await fetch('https://api.stability.ai/v1/user/account', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${stabilityApiKey}`,
-        'Accept': 'application/json',
-      },
-    });
-    if (!accountResponse.ok) {
-      const errorText = await accountResponse.text();
-      return res.status(500).json({ error: `Stability AI API key validation failed: ${accountResponse.status} - ${errorText}` });
-    }
-
-    // Download the original image
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      return res.status(400).json({ error: `Failed to fetch original image: ${imageResponse.status}` });
-    }
-    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-
-    // Resize image to 1024x1024 using sharp
-    const resizedImageBuffer = await sharp(imageBuffer)
-      .resize(1024, 1024, { fit: 'cover' })
-      .png()
-      .toBuffer();
-
-    // Prepare form data for Stability AI using formdata-node
-    const { FormData, File } = await import('formdata-node');
-    const formData = new FormData();
-    // Set the image first
-    formData.set('init_image', new File([resizedImageBuffer], 'init.png', { type: 'image/png' }));
-
-    // Then set the sampler
-    formData.set('sampler', 'K_DPMPP_2M');
-    
     // Use enhanced style prompt if available, otherwise fall back to basic prompt
     const styleDescription = stylePrompts[interiorStyle] || `${interiorStyle} style`;
     const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
-    formData.append('text_prompts[0][text]', prompt);
-    formData.append('text_prompts[0][weight]', '1');
-    const negativePrompt = `low resolution, painting, changing room layout, moving walls, changing windows, changing doors, changing room dimensions, changing architectural features, blurry, low quality, distorted, unrealistic, cartoon, painting, sketch`;
-    formData.append('text_prompts[1][text]', negativePrompt);
-    formData.append('text_prompts[1][weight]', '-1');
-    formData.append('init_image_mode', 'IMAGE_STRENGTH');
-    formData.append('image_strength', '0.35');
-    formData.append('cfg_scale', '11');
-    formData.append('samples', '1');
-    formData.append('steps', '30');
+    // Replicate adirik/interior-design model version (update if needed)
+    const modelVersion = 'b7c1e1e7e7e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2';
+    // See: https://replicate.com/adirik/interior-design/api
 
-    // Call Stability AI API
-    const stabilityResponse = await fetch('https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/image-to-image', {
+    // 1. Start prediction
+    const predictionResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${stabilityApiKey}`,
-        'Accept': 'application/json',
-        // Do NOT set Content-Type; fetch will set it automatically for FormData
+        'Authorization': `Token ${replicateApiToken}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify({
+        version: modelVersion,
+        input: {
+          image: imageUrl,
+          prompt: prompt
+        }
+      })
     });
-    if (!stabilityResponse.ok) {
-      const errorText = await stabilityResponse.text();
-      return res.status(500).json({ error: `Stability AI generation failed: ${stabilityResponse.status} - ${errorText}` });
+    if (!predictionResponse.ok) {
+      const errorText = await predictionResponse.text();
+      return res.status(500).json({ error: `Replicate API error: ${predictionResponse.status} - ${errorText}` });
     }
-    const result = await stabilityResponse.json();
-    if (!result.artifacts || result.artifacts.length === 0) {
-      return res.status(500).json({ error: 'No image generated by Stability AI.' });
+    const prediction = await predictionResponse.json();
+    let predictionGetUrl = prediction.urls && prediction.urls.get;
+    let status = prediction.status;
+    let outputUrl = null;
+    // 2. Poll for completion
+    for (let i = 0; i < 60; i++) { // up to ~60 seconds
+      if (status === 'succeeded') {
+        outputUrl = prediction.output && prediction.output[0];
+        break;
+      }
+      if (status === 'failed' || status === 'canceled') {
+        return res.status(500).json({ error: `Replicate prediction failed: ${status}` });
+      }
+      await new Promise(r => setTimeout(r, 2000));
+      const pollRes = await fetch(predictionGetUrl, {
+        headers: { 'Authorization': `Token ${replicateApiToken}` }
+      });
+      const pollData = await pollRes.json();
+      status = pollData.status;
+      if (status === 'succeeded') {
+        outputUrl = pollData.output && pollData.output[0];
+        break;
+      }
     }
-    const imageBase64 = result.artifacts[0].base64;
-    const generatedImageBuffer = Buffer.from(imageBase64, 'base64');
+    if (!outputUrl) {
+      return res.status(500).json({ error: 'Replicate did not return a generated image in time.' });
+    }
+    // 3. Download the generated image
+    const genImgRes = await fetch(outputUrl);
+    if (!genImgRes.ok) {
+      return res.status(500).json({ error: 'Failed to download generated image from Replicate.' });
+    }
+    const generatedImageBuffer = Buffer.from(await genImgRes.arrayBuffer());
 
-    // Upload to Supabase Storage
+    // 4. Upload to Supabase Storage
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const fileName = `transformed_${roomId}_${Date.now()}.png`;
     const filePath = `transformed/${fileName}`;
