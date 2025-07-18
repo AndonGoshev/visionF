@@ -59,7 +59,7 @@ export default async function handler(req, res) {
     const prompt = `Recreate this room in ${styleDescription}. Keep the same layout, size, height, and perspective. Add realistic, accurate furniture and decor matching the style. Do not change walls, windows, or structure.`;
 
     // Replicate adirik/interior-design model version (update if needed)
-    const modelVersion = 'b7c1e1e7e7e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2e2';
+    const modelVersion = '76604bad';
     // See: https://replicate.com/adirik/interior-design/api
 
     // 1. Start prediction
